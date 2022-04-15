@@ -1,5 +1,10 @@
 #include <Arduino.h>
 #include <heltec.h>
+#include <Ticker.h>
+#include <Cube.h>
+#include <Triangle.h>
+
+Ticker toggler;
 
 SSD1306Wire *display = Heltec.display;
 
@@ -140,17 +145,11 @@ const uint8_t epd_bitmap_Nouveau_projet [] PROGMEM = {
   };
 
 
-struct pt2D_t {
-  float x ;
-  float y ;
-};
-struct pt3D_t {
-  float x ;
-  float y ;
-  float z ;
-};
 
-pt2D_t cube_pt[8];
+
+
+
+
 // pt2D_t cube_pt[] = {
 //   {37.6867235218178,12.7373447043636},
 //   {73.7274204169332,5.42419319435559},
@@ -162,21 +161,9 @@ pt2D_t cube_pt[8];
 //   {59.2251850602793,45.0450370120559},
 // };
 
-float angle_deg = 30;
-float  z_offset = -4;
-float cube_size = 70;
 
-pt3D_t orig_points[] = {
-  {-1,-1,1},
-  {1,	-1,1},
-  {1,	1,1},
-  {-1,1,1},
-  {-1,-1,-1},
-  {1,	-1,-1},
-  {1,	1,-1},
-  {-1,1,-1}
-};
-pt3D_t rotated_points [8];
+
+
   
 // pt2D_t cube_pt[] = 
 //   {
@@ -190,57 +177,27 @@ pt3D_t rotated_points [8];
 //     {64+16,32+16},  //7
 //     {64-16,32+16}   //8
 //   };
-float shoelace(pt2D_t a,pt2D_t b,pt2D_t c,pt2D_t d){
-  return {
-    (a.x*b.y - a.y*b.x) + 
-    (b.x*c.y - b.y*c.x) + 
-    (c.x*d.y - c.y*d.x) + 
-    (d.x*a.y - d.y*a.x)
-  };
-}
-void hiddenCorner(pt2D_t a,pt2D_t b){
-  static int diviser = 3;
-  for (size_t i = 0; i < diviser; i++)
-  {
-    display->setPixel((i*(b.x - a.x)/diviser)+a.x,(i*(b.y - a.y)/diviser)+a.y);
-  }
-  
-}
-void drawFace(pt2D_t a,pt2D_t b,pt2D_t c,pt2D_t d){
-  if (shoelace(a,b,c,d)>=0)
-  {
-    display->drawLine(a.x,a.y,b.x,b.y);
-    display->drawLine(b.x,b.y,c.x,c.y);
-    display->drawLine(c.x,c.y,d.x,d.y);
-    display->drawLine(d.x,d.y,a.x,a.y);
 
-  } else
-  {
-    display->setPixel(a.x,a.y);
-    display->setPixel(b.x,b.y);
-    display->setPixel(c.x,c.y);
-    display->setPixel(d.x,d.y);
+Cube cube;
+Cube cube2;
+Triangle triangle;
 
-    hiddenCorner(a,b);
-    hiddenCorner(b,c);
-    hiddenCorner(c,d);
-    hiddenCorner(d,a);
-  }
-  
-  
-}
-void calcul(void){
-  for (size_t i = 0; i < 8; i++)
-  {
-    // rotate 3d points
-    rotated_points[i].x =  orig_points[i].x * cos(radians(angle_deg)) - orig_points[i].z * sin(radians(angle_deg));
-    rotated_points[i].y =  orig_points[i].y;
-    rotated_points[i].z =  orig_points[i].x * sin(radians(angle_deg)) + orig_points[i].z * cos(radians(angle_deg)) + z_offset;
+void toggle(){
+  static bool moved = false;
+  Serial.println("moved");
 
-    //project 3d points into 2d
-    cube_pt[i].x  = 64 - rotated_points[i].x / rotated_points[i].z * cube_size;
-    cube_pt[i].y  = 32 - rotated_points[i].y / rotated_points[i].z * cube_size;
+  if (moved)
+  {
+    cube.Translate({1,0,0});
+
+
+  }else
+  {
+    
+    cube.Translate({-1,0,0});
+    
   }
+  moved = !moved;
   
 }
 void setup() {
@@ -276,13 +233,18 @@ void setup() {
   display->display();
 
   delay(1000);
+  toggler.attach(2,toggle);
 
+  cube2.Translate({1,0,0});
+  triangle.Translate({-2,0,0});
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
 
-  calcul();
+  cube.calcul();
+  cube2.calcul();
+  triangle.calcul();
 
   display->clear();
 
@@ -296,10 +258,10 @@ void loop() {
 
     // }
   
-    drawFace(cube_pt[0],cube_pt[1],cube_pt[2],cube_pt[3]);
-    drawFace(cube_pt[1],cube_pt[5],cube_pt[6],cube_pt[2]);
-    drawFace(cube_pt[5],cube_pt[4],cube_pt[7],cube_pt[6]);
-    drawFace(cube_pt[4],cube_pt[0],cube_pt[3],cube_pt[7]);
+    
+  cube.render();
+  cube2.render();
+  triangle.render();
 
   //display->drawLine(cube_pt[4].x,cube_pt[4].y,cube_pt[5].x,cube_pt[5].y);
   //display->drawLine(cube_pt[5].x,cube_pt[5].y,cube_pt[6].x,cube_pt[6].y);
@@ -313,7 +275,9 @@ void loop() {
 
   display->display();
 
-  angle_deg += 1;
+  cube.inc_Angle(1);
+  cube2.inc_Angle(1);
+  triangle.inc_Angle(1);
 
   delay(50);
 }
