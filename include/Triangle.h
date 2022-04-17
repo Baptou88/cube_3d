@@ -6,7 +6,7 @@
 #define __TRIANGLE
 
 extern SSD1306Wire *display;
-class Triangle
+class Triangle: public Geometry
 {
 private:
   pt2D_t cube_pt[4];
@@ -16,10 +16,9 @@ private:
   {0,1,1},
   {0,0,-1}
 };
-float angle_deg = 0;
+
 float  z_offset = -4;
 float cube_size = 70;
-
 pt3D_t rotated_points [4];
 public:
   Triangle(/* args */);
@@ -28,7 +27,7 @@ public:
   void hiddenCorner(pt2D_t a,pt2D_t b);
   void drawFace(pt2D_t a,pt2D_t b,pt2D_t c);
   void calcul(void);
-  void inc_Angle(int inc);
+  virtual void inc_Angle(int inc);
   void render();
   void Translate(pt3D_t vector);
 };
@@ -94,9 +93,7 @@ void Triangle::calcul(void){
   }
   
 }
-void Triangle::inc_Angle(int inc){
-  this->angle_deg += inc;
-}
+
 void Triangle::render(void){
   drawFace(cube_pt[0],cube_pt[1],cube_pt[2]);
   drawFace(cube_pt[3],cube_pt[1],cube_pt[0]);

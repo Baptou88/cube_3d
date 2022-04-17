@@ -184,7 +184,7 @@ Triangle triangle;
 
 void toggle(){
   static bool moved = false;
-  Serial.println("moved");
+  //Serial.println("moved");
 
   if (moved)
   {
