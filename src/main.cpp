@@ -1,8 +1,15 @@
 #include <Arduino.h>
+#include <ArduinoOTA.h>
+#include <WiFi.h>
+#include <ESPmDNS.h>
+#include <WiFiUdp.h>
+
 #include <heltec.h>
 #include <Ticker.h>
 #include <Cube.h>
 #include <Triangle.h>
+
+#include "confidential.h" // Wifi crendential
 
 Ticker toggler;
 
@@ -206,6 +213,38 @@ void setup() {
   Heltec.begin(true,true,true,true,868E6);
   display->clear();
 
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED)
+  {
+    display->drawString(0,0,"Waiting for Wifi");
+    display->display();
+    delay(100);
+
+  }
+  display->clear();
+
+  ArduinoOTA.begin();
+  ArduinoOTA.onStart([]() {
+    display->clear();
+    display->setFont(ArialMT_Plain_10);
+    display->setTextAlignment(TEXT_ALIGN_CENTER_BOTH);
+    display->drawString(display->getWidth() / 2, display->getHeight() / 2 - 20, "OTA Update");
+    display->display();
+  });
+
+  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+    display->drawProgressBar(4, 32, 120, 8, progress / (total / 100) );
+    display->display();
+  });
+
+  ArduinoOTA.onEnd([]() {
+    display->clear();
+    display->setFont(ArialMT_Plain_10);
+    display->setTextAlignment(TEXT_ALIGN_CENTER_BOTH);
+    display->drawString(display->getWidth() / 2, display->getHeight() / 2, "Restart");
+    display->display();
+  });
+  
   display->drawXbm(0,0,128,64,epd_bitmap_Nouveau_projet);
 
   
@@ -241,7 +280,7 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
-
+  ArduinoOTA.handle();
   cube.calcul();
   cube2.calcul();
   triangle.calcul();
