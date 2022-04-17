@@ -4,7 +4,9 @@
 #include <ESPmDNS.h>
 #include <WiFiUdp.h>
 
-#include <heltec.h>
+//#include <heltec.h>
+#include <SSD1306Wire.h>
+
 #include <Ticker.h>
 #include <Cube.h>
 #include <Triangle.h>
@@ -15,7 +17,8 @@
 Ticker toggler;
 Ticker newValueTicker;
 
-SSD1306Wire *display = Heltec.display;
+//SSD1306Wire *display = Heltec.display;
+SSD1306Wire *display;
 
 // 'Nouveau projet', 128x64px
 const uint8_t vertic [] PROGMEM = {
@@ -218,9 +221,25 @@ void toggle(){
 void setup() {
   // put your setup code here, to run once:
 
-  Heltec.begin(true,true,true,true,868E6);
+  pinMode(16,OUTPUT);
+  digitalWrite(16,LOW);
+  delay(1);
+  digitalWrite(16,HIGH);
+  Serial.begin(115200);
+  //Heltec.begin(true,true,true,true,868E6);
+  display = new SSD1306Wire(0x3c,4,15,OLEDDISPLAY_GEOMETRY::GEOMETRY_128_64);
+  if (display->init())
+  {
+    Serial.println("Display init done");
+  } else
+  {
+    Serial.println("Display init failed");
+    /* code */
+  }
+  
+  display->flipScreenVertically();
+  
   display->clear();
-
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED)
   {

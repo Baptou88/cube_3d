@@ -1,6 +1,7 @@
 #include <Geometry.h>
 #include <Geometry.h>
-#include <heltec.h>
+//#include <heltec.h>
+#include <SSD1306Wire.h>
 
 #if !defined(__CUBE)
 #define __CUBE

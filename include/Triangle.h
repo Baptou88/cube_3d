@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <Geometry.h>
-#include <heltec.h>
+//#include <heltec.h>
+#include <SSD1306Wire.h>
 
 #if !defined(__TRIANGLE)
 #define __TRIANGLE
