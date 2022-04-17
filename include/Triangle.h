@@ -27,7 +27,7 @@ public:
   void hiddenCorner(pt2D_t a,pt2D_t b);
   void drawFace(pt2D_t a,pt2D_t b,pt2D_t c);
   void calcul(void);
-  virtual void inc_Angle(int inc);
+ void inc_Angle(int inc);
   void render();
   void Translate(pt3D_t vector);
 };
@@ -55,8 +55,7 @@ void Triangle::hiddenCorner(pt2D_t a,pt2D_t b){
   
 }
 void Triangle::drawFace(pt2D_t a,pt2D_t b,pt2D_t c){
-  float test = shoelace(a,b,c); 
-  Serial.println(test);
+  
   if (shoelace(a,b,c) >=0)
   {
     display->drawLine(a.x,a.y,b.x,b.y);
@@ -111,5 +110,11 @@ void Triangle::Translate(pt3D_t vector){
   
   
 }
+
+void Triangle::inc_Angle(int inc){
+  this->angle_deg += inc;
+}
+
+
 
 #endif // __TRIANGLE

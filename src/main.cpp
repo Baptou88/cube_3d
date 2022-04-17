@@ -8,10 +8,12 @@
 #include <Ticker.h>
 #include <Cube.h>
 #include <Triangle.h>
+#include <digitalInput.h>
 
 #include "confidential.h" // Wifi crendential
 
 Ticker toggler;
+Ticker newValueTicker;
 
 SSD1306Wire *display = Heltec.display;
 
@@ -151,9 +153,15 @@ const uint8_t epd_bitmap_Nouveau_projet [] PROGMEM = {
   0x00, 0x00, 0x00, 0x00
   };
 
+float graphValue[128];
+bool newValue = false;
+int XValue= 0;
+bool maxValueReached = false;
 
 
 
+digitalInput PRGButton(0,INPUT_PULLUP);
+byte State = 0;
 
 
 
@@ -276,47 +284,107 @@ void setup() {
 
   cube2.Translate({1,0,0});
   triangle.Translate({-2,0,0});
+  PRGButton.loop();
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
   ArduinoOTA.handle();
-  cube.calcul();
-  cube2.calcul();
-  triangle.calcul();
 
-  display->clear();
-
-    // //face A
-    // if (shoelace(cube_pt[0],cube_pt[1],cube_pt[2],cube_pt[3])>=0)
-    // {
-    //   display->drawLine(cube_pt[0].x,cube_pt[0].y,cube_pt[1].x,cube_pt[1].y);
-    //   display->drawLine(cube_pt[1].x,cube_pt[1].y,cube_pt[2].x,cube_pt[2].y);
-    //   display->drawLine(cube_pt[2].x,cube_pt[2].y,cube_pt[3].x,cube_pt[3].y);
-    //   display->drawLine(cube_pt[3].x,cube_pt[3].y,cube_pt[0].x,cube_pt[0].y);
-
-    // }
+  //acquisition des données
+  PRGButton.loop();
   
+  if (PRGButton.frontDesceandant())
+  {
+    State++;
+  }
+  switch (State)
+  {
+  case 0:
+    cube.calcul();
+    cube2.calcul();
+    triangle.calcul();
+
+    display->clear();
+
+      // //face A
+      // if (shoelace(cube_pt[0],cube_pt[1],cube_pt[2],cube_pt[3])>=0)
+      // {
+      //   display->drawLine(cube_pt[0].x,cube_pt[0].y,cube_pt[1].x,cube_pt[1].y);
+      //   display->drawLine(cube_pt[1].x,cube_pt[1].y,cube_pt[2].x,cube_pt[2].y);
+      //   display->drawLine(cube_pt[2].x,cube_pt[2].y,cube_pt[3].x,cube_pt[3].y);
+      //   display->drawLine(cube_pt[3].x,cube_pt[3].y,cube_pt[0].x,cube_pt[0].y);
+
+      // }
     
-  cube.render();
-  cube2.render();
-  triangle.render();
+      
+    cube.render();
+    cube2.render();
+    triangle.render();
 
-  //display->drawLine(cube_pt[4].x,cube_pt[4].y,cube_pt[5].x,cube_pt[5].y);
-  //display->drawLine(cube_pt[5].x,cube_pt[5].y,cube_pt[6].x,cube_pt[6].y);
-  //display->drawLine(cube_pt[6].x,cube_pt[6].y,cube_pt[7].x,cube_pt[7].y);
-  //display->drawLine(cube_pt[7].x,cube_pt[7].y,cube_pt[4].x,cube_pt[4].y);
+    //display->drawLine(cube_pt[4].x,cube_pt[4].y,cube_pt[5].x,cube_pt[5].y);
+    //display->drawLine(cube_pt[5].x,cube_pt[5].y,cube_pt[6].x,cube_pt[6].y);
+    //display->drawLine(cube_pt[6].x,cube_pt[6].y,cube_pt[7].x,cube_pt[7].y);
+    //display->drawLine(cube_pt[7].x,cube_pt[7].y,cube_pt[4].x,cube_pt[4].y);
 
-  //display->drawLine(cube_pt[0].x,cube_pt[0].y,cube_pt[4].x,cube_pt[4].y);
-  //display->drawLine(cube_pt[1].x,cube_pt[1].y,cube_pt[5].x,cube_pt[5].y);
-  //display->drawLine(cube_pt[2].x,cube_pt[2].y,cube_pt[6].x,cube_pt[6].y);
-  //display->drawLine(cube_pt[3].x,cube_pt[3].y,cube_pt[7].x,cube_pt[7].y);
+    //display->drawLine(cube_pt[0].x,cube_pt[0].y,cube_pt[4].x,cube_pt[4].y);
+    //display->drawLine(cube_pt[1].x,cube_pt[1].y,cube_pt[5].x,cube_pt[5].y);
+    //display->drawLine(cube_pt[2].x,cube_pt[2].y,cube_pt[6].x,cube_pt[6].y);
+    //display->drawLine(cube_pt[3].x,cube_pt[3].y,cube_pt[7].x,cube_pt[7].y);
 
-  display->display();
+    display->display();
 
-  cube.inc_Angle(1);
-  cube2.inc_Angle(1);
-  triangle.inc_Angle(1);
+    cube.inc_Angle(1);
+    cube2.inc_Angle(1);
+    triangle.inc_Angle(1);
+    break;
+    case 1:
+      display->clear();
+
+        XValue++;
+      if (XValue <= 120)
+      {
+        graphValue[XValue] = sin(XValue*.2);
+        
+        if (XValue == 120)
+        {
+          newValueTicker.attach_ms(150,[]{
+            newValue = true;
+          });
+        } 
+        
+        
+        
+      }else
+        {
+          if (newValue)
+          {
+            newValue = false;
+            for (size_t i = 0; i < 120; i++)
+            {
+              graphValue[i]= graphValue[i+1];
+            }
+            graphValue[120] = sin(XValue*.2);
+          }
+          
+        }
+      for (size_t i = 0; i < 120; i++)
+        {
+          display->setPixel(i,32+(graphValue[i]*30));
+        }
+      display->drawHorizontalLine(0,32,128);
+      display->display();
+      delay(100);
+      break;
+  default:
+    State = 0;
+    display->clear();
+    display->drawString(0,0,String(State));
+    display->display();
+
+    break;
+  }
+  
 
   delay(50);
 }
