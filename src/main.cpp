@@ -261,7 +261,7 @@ void setup() {
   display->drawXbm(64-9/2,32-37/2,9,37,vertic);
   display->display();
   delay(500);
-  display->drawXbm(64-31/2,32-31/2,31,31,inc135);
+  display->drawXbm(64-31/2,32-31/2,31,31,inc45);
   display->display();
   delay(500);
 
@@ -269,10 +269,16 @@ void setup() {
   display->display();
   delay(500);
 
-  display->drawXbm(64-31/2,32-31/2,31,31,inc45);
+  display->drawXbm(64-31/2,32-31/2,31,31,inc135);
   display->setColor(OLEDDISPLAY_COLOR::BLACK);
   display->drawXbm(64-9/2,32-37/2,9,37,vertic);
   display->setColor(OLEDDISPLAY_COLOR::WHITE);
+  display->display();
+  delay(500);
+  display->setColor(OLEDDISPLAY_COLOR::BLACK);
+  display->drawXbm(64-31/2,32-31/2,31,31,inc45);
+  display->setColor(OLEDDISPLAY_COLOR::WHITE);
+  display->drawXbm(64-9/2,32-37/2,9,37,vertic);
   display->display();
 
   delay(1000);
@@ -350,6 +356,7 @@ void loop() {
         {
           newValueTicker.attach_ms(150,[]{
             newValue = true;
+            Serial.println("prejent !");
           });
         } 
         
